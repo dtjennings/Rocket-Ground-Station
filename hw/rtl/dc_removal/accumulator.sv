@@ -2,6 +2,9 @@
 // This is the rtl for an accumulator
 ////////////////////////////////////////////////////////////
 
+timeunit 1ns;
+timeprecision 1ns;
+
 module accumulator #(
     parameter DATA_WIDTH = 8
 )(
@@ -9,7 +12,7 @@ module accumulator #(
     input logic rst,
     input logic en,
     input logic [DATA_WIDTH-1:0] din,
-    output logic [DATA_WIDTH-1:0] dout
+    output logic [17:0] dout
 );
 
     logic [18:0] total;

@@ -2,17 +2,46 @@
 // This is the top level rtl for the DC Offset Removal IP
 ////////////////////////////////////////////////////////////
 
+timeunit 1ns;
+timeprecision 1ns;
+
 module dc_removal #(
     parameter ADDR_WIDTH = 10,
     parameter DATA_WIDTH = 8
 )(
-    input logic clk;
-    input logic rst;
-    input [DATA_WIDTH-1:0] I;
-    input [DATA_WIDTH-1:0] Q;
+    input logic clk,
+    input logic rst,
+    input [DATA_WIDTH-1:0] I,
+    input [DATA_WIDTH-1:0] Q,
+    output [DATA_WIDTH-1:0] I_clean,
+    output [DATA_WIDTH-1:0] Q_clean
 );
 
     logic [ADDR_WIDTH:0]addr;
+    logic we;
+    logic done;
+    logic en;
+    logic [17:0] total_I;
+    logic [17:0] total_Q;
+    logic [DATA_WIDTH-1:0] stored_I;
+    logic [DATA_WIDTH-1:0] stored_Q;
+
+    logic [DATA_WIDTH-1:0] I_dc;
+    logic [DATA_WIDTH-1:0] Q_dc;
+
+    // Subtract the DC offsets from the IQ values
+    data_cleaner #(
+        .DATA_WIDTH(DATA_WIDTH)
+    ) inst (
+        .clk(clk),
+        .rst(rst),
+        .I_dc(I_dc),
+        .Q_dc(Q_dc),
+        .stored_I(stored_I),
+        .stored_Q(stored_Q),
+        .clean_I(I_clean),
+        .clean_Q(Q_clean)
+    );
 
     // Accumulator for the I samples
     accumulator #(
@@ -20,9 +49,9 @@ module dc_removal #(
     ) I (
         .clk(clk),
         .rst(rst),
-        .en(),
+        .en(done),
         .din(I),
-        .dout()
+        .dout(total_I)
     );
 
     // Accumulator for the Q samples
@@ -31,9 +60,9 @@ module dc_removal #(
     ) Q (
         .clk(clk),
         .rst(rst),
-        .en(),
+        .en(done),
         .din(Q),
-        .dout()
+        .dout(total_Q)
     );
 
     // Signle port RAM for the I samples
@@ -42,10 +71,10 @@ module dc_removal #(
         .DATA_WIDTH(DATA_WIDTH)
     ) I (
         .clk(clk),
-        .we(),
+        .we(we),
         .addr(addr),
         .din(I),
-        .dout()
+        .dout(stored_I)
     )
 
     // Signle port RAM for the Q samples
@@ -54,21 +83,42 @@ module dc_removal #(
         .DATA_WIDTH(DATA_WIDTH)
     ) Q (
         .clk(clk),
-        .we(),
+        .we(we),
         .addr(addr),
         .din(Q),
-        .dout()
+        .dout(stored_Q)
     )
 
     // IQ Sample Counter
     iq_counter #(
         .WIDTH(ADDR_WIDTH)
     ) inst(
-        .en(),
-        .rst(),
+        .en(en),
+        .rst(rst),
         .clk(clk),
         .iq_count(addr)
     );
+
+    assign I_dc = total_I / 2**ADDR_WIDTH;
+    assign Q_dc = total_Q / 2**ADDR_WIDTH;
+
+    always_ff @(posedge clk or posedge rst) begin
+        if (rst) begin
+            en <= 0;
+            we <= 0;
+            done <= 0;
+        end
+        else begin
+            if (addr < 2**WIDTH) begin
+                en <= 1'b1;
+                we <= 1'b1;
+            end
+            else begin
+                we <= ~we;
+                done <= ~done;
+            end
+        end
+    end
 
 
 endmodule
