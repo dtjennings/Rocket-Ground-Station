@@ -5,16 +5,21 @@
 timeunit 1ns;
 timeprecision 1ns;
 
+`include "accumulator.sv"
+`include "data_cleaner.sv"
+`include "iq_counter.sv"
+`include "single_port_ram.sv"
+
 module dc_removal #(
     parameter ADDR_WIDTH = 10,
     parameter DATA_WIDTH = 8
 )(
     input logic clk,
     input logic rst,
-    input [DATA_WIDTH-1:0] I,
-    input [DATA_WIDTH-1:0] Q,
-    output [DATA_WIDTH-1:0] I_clean,
-    output [DATA_WIDTH-1:0] Q_clean
+    input logic [DATA_WIDTH-1:0] I,
+    input logic [DATA_WIDTH-1:0] Q,
+    output logic [DATA_WIDTH-1:0] I_clean,
+    output logic [DATA_WIDTH-1:0] Q_clean
 );
 
     logic [ADDR_WIDTH:0]addr;
@@ -46,7 +51,7 @@ module dc_removal #(
     // Accumulator for the I samples
     accumulator #(
         .DATA_WIDTH(DATA_WIDTH)
-    ) I (
+    ) I_acc (
         .clk(clk),
         .rst(rst),
         .en(done),
@@ -57,7 +62,7 @@ module dc_removal #(
     // Accumulator for the Q samples
     accumulator #(
         .DATA_WIDTH(DATA_WIDTH)
-    ) Q (
+    ) Q_acc (
         .clk(clk),
         .rst(rst),
         .en(done),
@@ -69,30 +74,30 @@ module dc_removal #(
     single_port_ram #(
         .ADDR_WIDTH(ADDR_WIDTH),
         .DATA_WIDTH(DATA_WIDTH)
-    ) I (
+    ) I_ram (
         .clk(clk),
         .we(we),
         .addr(addr),
         .din(I),
         .dout(stored_I)
-    )
+    );
 
     // Signle port RAM for the Q samples
     single_port_ram #(
         .ADDR_WIDTH(ADDR_WIDTH),
         .DATA_WIDTH(DATA_WIDTH)
-    ) Q (
+    ) Q_ram (
         .clk(clk),
         .we(we),
         .addr(addr),
         .din(Q),
         .dout(stored_Q)
-    )
+    );
 
     // IQ Sample Counter
     iq_counter #(
         .WIDTH(ADDR_WIDTH)
-    ) inst(
+    ) counter(
         .en(en),
         .rst(rst),
         .clk(clk),
@@ -109,7 +114,7 @@ module dc_removal #(
             done <= 0;
         end
         else begin
-            if (addr < 2**WIDTH) begin
+            if (addr < 2**ADDR_WIDTH) begin
                 en <= 1'b1;
                 we <= 1'b1;
             end
