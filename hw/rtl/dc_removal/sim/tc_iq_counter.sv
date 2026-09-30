@@ -2,9 +2,6 @@
 // This is the simulation testcase for the IQ sample counter
 ////////////////////////////////////////////////////////////
 
-timeunit 1ns;
-timeprecision 1ns;
-
 module tc_iq_counter();
 
     parameter WIDTH = 10;
@@ -12,9 +9,11 @@ module tc_iq_counter();
     logic en;
     logic rst;
     logic clk;
-    logic [WIDTH:0] iq_count;
+    logic [WIDTH-1:0] iq_count;
 
-    iq_counter inst(
+    iq_counter #(
+        .WIDTH(WIDTH)
+    ) inst(
         .en         (en),
         .rst        (rst),
         .clk        (clk),

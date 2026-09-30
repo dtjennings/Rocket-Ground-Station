@@ -22,7 +22,7 @@ module dc_removal #(
     output logic [DATA_WIDTH-1:0] Q_clean
 );
 
-    logic [ADDR_WIDTH:0]addr;
+    logic [ADDR_WIDTH-1:0]addr;
     logic we;
     logic done;
     logic en;
@@ -98,7 +98,6 @@ module dc_removal #(
     iq_counter #(
         .WIDTH(ADDR_WIDTH)
     ) counter(
-        .en(en),
         .rst(rst),
         .clk(clk),
         .iq_count(addr)
@@ -109,21 +108,15 @@ module dc_removal #(
 
     always_ff @(posedge clk or posedge rst) begin
         if (rst) begin
-            en <= 0;
-            we <= 0;
+            we <= 1'b1;
             done <= 0;
         end
         else begin
-            if (addr < 2**ADDR_WIDTH) begin
-                en <= 1'b1;
-                we <= 1'b1;
-            end
-            else begin
+            if (addr == 2**ADDR_WIDTH-1) begin
                 we <= ~we;
                 done <= ~done;
             end
         end
     end
-
 
 endmodule
