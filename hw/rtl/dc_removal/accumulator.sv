@@ -21,8 +21,10 @@ module accumulator #(
         if (rst) 
             total <= 18'b0;
         else begin
-            if (en) 
+            if (en) begin
                 dout <= total;
+                total <= 18'b0;
+            end
             else begin
                 total <= total + din;
             end
