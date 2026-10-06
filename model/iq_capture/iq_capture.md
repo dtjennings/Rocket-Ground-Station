@@ -53,3 +53,18 @@ Should see:
 RTL-SDR devices: ['00000001']                                                                                           Count: 1  
 
 
+------------------------------------------------------
+
+The rtlsdr library will still need to be used on the KR260. It will be used on the PS to acquire complex IQ samples. The numpy DSP would instead be done on the FPGA and so numpy wouldn't be used, however, the functions would be similar. Matplotlib could potentially be used to display data on the laptop UI.
+
+-------------------------------------------------------
+
+run test_sdr.py to ensure rtl sdr is being detected.
+
+-------------------------------------------------------
+
+PyRTLSDR documentation
+
+https://pyrtlsdr.readthedocs.io/en/latest/Overview.html#usage
+
+https://github.com/pyrtlsdr/pyrtlsdr/blob/master/rtlsdr/rtlsdr.py
