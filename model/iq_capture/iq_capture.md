@@ -124,3 +124,71 @@ There was an increase in average power, but not as much as I would have expected
 
 To read samples:
 samples = sdr.read_samples(1024)
+
+each array element is one complex IQ sample:
+x[n] = I[n] + jQ[n]
+
+[INFO] Samples dtype: complex128
+- this is does not mean a 128 bit ADC. The sdr has low resolution ADC samples - PyRTLSDR scales the received data into NumPy complex floating point values for convenient processing
+
+Numpy allows us to access the two components directly:
+real_samples = samples.real
+imag_samples = samples.imag
+
+-------------------------------------------------------
+
+Complex magnitude:
+|x[n]| = sqrt(I[n]^2 + Q[n]^2)
+
+Magnitude gives simple indication of the instantaneous received signal amplitude.
+
+np.abs()
+
+-------------------------------------------------------
+
+FFT transforms a block of complex IQ samples in time domain into a set of frequency components.
+
+np.fft.fft()
+
+this doesn't return frequencies ordered as:
+-Fs/2 -> 0 -> +Fs/2
+
+each fft result is also a complex sample.
+
+Each one measures how strongly a particular discrete frequency is present in the captured signal. Noise distributes energy across many bins.
+
+Design decision for FPGA implementation of FFT: FFT length N, this affects frequency resolution, latency, resource usage, frame duration
+
+-------------------------------------------------------
+
+frequency resolution = Fs / N
+
+This tells the frequency spacing between adjacent FFT bins.
+
+On the FPGA a larger N results in a better frequency resolution however, more samples per frame, more memory, more fft processing and greater latency.
+
+-------------------------------------------------------
+
+np.fft.fftfreq()
+
+Arguments:
+- number of FFT samples
+- sample spacing
+
+the sample spacing is:
+d = Ts = 1/Fs
+
+Numpy orders frequency in a weird way:
+0, small +ve, large +ve, small -ve, small +ve
+
+-------------------------------------------------------
+
+What does baseband frequency mean?
+
+-------------------------------------------------------
+
++ve and -ve frequencies distiguish frequencies above and below the centre frequency.
+
+To centre these frequency we use:
+np.fft.fftshift()
+
