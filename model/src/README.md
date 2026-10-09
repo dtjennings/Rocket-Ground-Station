@@ -1,0 +1,1 @@
+python -u "c:\Users\dtjen\Documents\GitHub\Rocket-Ground-Station\model\src\receiver.py" --input C:\Users\dtjen\Documents\GitHub\Rocket-Ground-Station\lora_captures\lora_packet_20261008_101056.npy --config C:\Users\dtjen\Documents\GitHub\Rocket-Ground-Station\model\src\config.json

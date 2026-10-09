@@ -1,0 +1,7 @@
+{
+    "sample_rate": 2560000,
+    "rf_frequency": 868100000,
+    "sdr_center_frequency": 868350000,
+    "bandwidth": 125000,
+    "spreading_factor": 7
+}

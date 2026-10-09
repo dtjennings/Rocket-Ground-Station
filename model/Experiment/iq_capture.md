@@ -209,3 +209,5 @@ returns baseband frequencies
 
 To display the actual frequencies we use this relationship:
 f_RF = fc + f_baseband
+
+
