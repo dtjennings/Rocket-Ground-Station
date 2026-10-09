@@ -192,3 +192,20 @@ What does baseband frequency mean?
 To centre these frequency we use:
 np.fft.fftshift()
 
+-------------------------------------------------------
+
+XdB = 20log10(X[k])
+
+np.log10
+
+Displaying in logarithmic scale allows us to conveniently sidplay signals spanning a large range.
+
+log10(0) tends toward infinity
+np.maximum
+-------------------------------------------------------
+
+np.fft.fftfreq() 
+returns baseband frequencies
+
+To display the actual frequencies we use this relationship:
+f_RF = fc + f_baseband

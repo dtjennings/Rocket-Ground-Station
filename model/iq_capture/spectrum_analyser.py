@@ -8,8 +8,9 @@ from rtlsdr import RtlSdr
 import numpy as np
 
 # Parameters
-N = 1024
+N = 256 * 1024
 Fs = 2.56e6
+fc = 868.1e6
 
 # Get a list of detected device serial numbers 
 serial_numbers = RtlSdr.get_device_serial_addresses()
@@ -23,7 +24,7 @@ except Exception as e:
     
 # Configure SDR Parameters
 sdr.sample_rate = Fs # 2.4 MS/s
-sdr.center_freq = 869.5e6 # 869.5 MHz
+sdr.center_freq = fc # 869.5 MHz
 sdr.gain = 9 
 
 #-----------------------------------------------------------
@@ -54,6 +55,7 @@ print(f"[INFO] Tuner Type: {tuner_type}")
 
 # Investigating samples
 samples = sdr.read_samples(N)
+sdr.close()
 
 print(f"[INFO] Samples type: {type(samples)}")
 print(f"[INFO] Samples shape: {samples.shape}")
@@ -119,14 +121,14 @@ plt.show()
 
 fft_bins = np.fft.fft(samples)
 fft_bins = np.fft.fftshift(fft_bins)
-fft_mag = np.abs(fft_bins)
+fft_mag = 10 * np.log10(np.maximum(np.abs(fft_bins), 1e-12))
 
 print(f"[INFO] FFT Samples shape: {fft_bins.shape}")
 print(f"[INFO] FFT Samples dtype: {fft_bins.dtype}")
 
 # Plotting FFT magnitude against bin number
 plt.figure()
-plt.plot(n, fft_mag, label="FFT Magnitude")
+plt.plot(n, fft_mag, label="FFT Magnitude dB")
 plt.xlabel("FFT Bin Number")
 plt.ylabel("Freq")
 plt.grid()
@@ -135,19 +137,20 @@ plt.show()
 
 #-----------------------------------------------------------
 
-freq = np.fft.fftfreq(fft_bins.size, d=1/Fs)
-freq = np.fft.fftshift(freq)
+freq_baseband = np.fft.fftfreq(fft_bins.size, d=1/Fs)
+freq_baseband = np.fft.fftshift(freq_baseband)
+freq_rf = freq_baseband + fc
 
-print(f"[INFO] Frequency 511: {freq[511]}")
-print(f"[INFO] Frequency 512: {freq[512]}")
-print(f"[INFO] Frequency 1023: {freq[1023]}")
+print(f"[INFO] Frequency 511: {freq_rf[511]}")
+print(f"[INFO] Frequency 512: {freq_rf[512]}")
+print(f"[INFO] Frequency 1023: {freq_rf[1023]}")
 
-print(f"[INFO] freq shape: {freq.shape}")
-print(f"[INFO] freq dtype: {freq.dtype}")
+print(f"[INFO] freq shape: {freq_rf.shape}")
+print(f"[INFO] freq dtype: {freq_rf.dtype}")
 
 # Plotting frequency against bin number
 plt.figure()
-plt.plot(n, freq, label="Freq")
+plt.plot(n, freq_rf, label="Freq")
 plt.xlabel("FFT Bin Number")
 plt.ylabel("Freq")
 plt.grid()
@@ -158,17 +161,16 @@ plt.show()
 
 #Plotting FFT magnitudes vs frequency
 plt.figure()
-plt.plot(freq, fft_mag, label="FFT Magnitude")
-plt.xlabel("Baseband Frequency (Hz)")
+plt.plot(freq_rf, fft_mag, label="FFT Magnitude dB")
+plt.xlabel("RF Frequency (Hz)")
 plt.ylabel("Magnitude")
 plt.grid()
 plt.legend()
 plt.show()
 
-print(f"[INFO] Frequency 0: {freq[0]}")
-print(f"[INFO] Frequency 512: {freq[512]}")
-print(f"[INFO] Frequency 1023: {freq[1023]}")
+print(f"[INFO] Frequency 0: {freq_rf[0]}")
+print(f"[INFO] Frequency 512: {freq_rf[512]}")
+print(f"[INFO] Frequency 1023: {freq_rf[1023]}")
 
 #-----------------------------------------------------------
 
-sdr.close()
